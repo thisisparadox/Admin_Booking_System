@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transactions - Storm's Beach and Country Club{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/transaction.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="dashboard-content">
+    <div class="page-header">
+        <h1>Transactions</h1>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search transactions..." id="transactionSearch" value="{{ search_query|default:'' }}">
+        </div>
+        <button type="submit" class="search-btn">Search</button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stats-card">
+            <div class="title">Today's Revenue</div>
+            <div class="value">₱{{ total_revenue|default:"0" }}</div>
+            <div class="change {% if revenue_change > 0 %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-arrow-{% if revenue_change > 0 %}up{% else %}down{% endif %}"></i>
+                {{ revenue_change|default:"0" }}%
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="title">Today's Refunds</div>
+            <div class="value">₱{{ total_refunds|default:"0" }}</div>
+            <div class="change {% if refund_change > 0 %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-arrow-{% if refund_change > 0 %}up{% else %}down{% endif %}"></i>
+                {{ refund_change|default:"0" }}%
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="title">Failed Transactions</div>
+            <div class="value">{{ failed_transactions|default:"0" }}</div>
+            <div class="change {% if failed_change > 0 %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-arrow-{% if failed_change > 0 %}up{% else %}down{% endif %}"></i>
+                {{ failed_change|default:"0" }}%
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="title">Popular Method</div>
+            <div class="value">{{ popular_method|default:"GCash" }} ({{ method_percentage|default:"0%" }})</div>
+            <div class="change positive">
+                <i class="fas fa-arrow-up"></i>
+                {{ method_change|default:"0" }}%
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="export-buttons">
+        <a href="{% url 'export_transactions' %}?format=excel{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Export to Excel
+        </a>
+        <a href="{% url 'export_transactions' %}?format=pdf{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-danger">
+            <i class="fas fa-file-pdf"></i> Export to PDF
+        </a>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="recent-transactions">
+        <h2>Recent Transactions</h2>
+
+        {% if transactions %}
+        <div class="table-responsive">
+            <table id="transactionsTable">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Booking ID</th>
+                        <th>Guest</th>
+                        <th>Service</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.transaction_id }}</td>
+                        <td>{{ transaction.booking.booking_id }}</td>
+                        <td>{{ transaction.booking.guest.get_full_name|default:transaction.booking.guest.username }}</td>
+                        <td>{{ transaction.booking.service.name }}</td>
+                        <td>₱{{ transaction.amount }}</td>
+                        <td>{{ transaction.get_payment_method_display }}</td>
+                        <td><span class="status {{ transaction.status }}">{{ transaction.get_status_display }}</span></td>
+                        <td>{{ transaction.get_transaction_type_display }}</td>
+                        <td>{{ transaction.transaction_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ transaction.reference_code|default:"-" }}</td>
+                        <td>
+                            <div class="action-icons">
+                                <a href="#" class="edit-transaction" data-id="{{ transaction.id }}" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="#" class="delete-transaction" data-id="{{ transaction.id }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                <a href="{% url 'transaction_receipt' transaction.id %}" class="receipt-transaction" title="Receipt">
+                                    <i class="fas fa-receipt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-exchange-alt"></i>
+            <p>No transactions found</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Edit Transaction Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Transaction</h2>
+            <button class="close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="editTransactionForm">
+                {% csrf_token %}
+                <input type="hidden" id="editTransactionId">
+                <div class="form-group">
+                    <label for="editBookingId">Booking ID</label>
+                    <input type="text" id="editBookingId" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editUserId">Guest</label>
+                    <select id="editUserId" class="form-control" required>
+                        <option value="">Select Guest</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editServiceId">Service</label>
+                    <select id="editServiceId" class="form-control" required>
+                        <option value="">Select Service</option>
+                        {% for service in services %}
+                        <option value="{{ service.id }}">{{ service.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editAmount">Amount</label>
+                    <input type="number" id="editAmount" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPaymentMethod">Payment Method</label>
+                    <select id="editPaymentMethod" class="form-control" required>
+                        {% for value, name in payment_methods %}
+                        <option value="{{ value }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status</label>
+                    <select id="editStatus" class="form-control" required>
+                        {% for value, name in status_choices %}
+                        <option value="{{ value }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editTransactionType">Transaction Type</label>
+                    <select id="editTransactionType" class="form-control" required>
+                        <option value="payment">Payment</option>
+                        <option value="refund">Refund</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editTransactionDate">Transaction Date</label>
+                    <input type="datetime-local" id="editTransactionDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editReferenceCode">Reference Code</label>
+                    <input type="text" id="editReferenceCode" class="form-control">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary close-btn">Cancel</button>
+            <button class="btn btn-primary" id="saveTransactionBtn">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Transaction Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Delete Transaction</h2>
+            <button class="close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="delete-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Are you sure you want to delete this transaction?</p>
+            </div>
+            <div class="transaction-info">
+                <p><strong>Transaction ID:</strong> <span id="deleteTransactionId"></span></p>
+                <p><strong>Amount:</strong> <span id="deleteTransactionAmount"></span></p>
+            </div>
+            <p class="warning-text">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary close-btn">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/transactions.js' %}"></script>
+{% endblock %} 

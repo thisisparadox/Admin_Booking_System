@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Storm's Beach and Country Club{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'img/favicon.png' %}" type="image/png">
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Page-specific CSS -->
+    {% block css %}{% endblock %}
+
+    <!-- Override CSS Variables -->
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #eef2ff;
+            --primary-dark: #3a56d4;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --white: #ffffff;
+        }
+
+        /* Fix for profile dropdown */
+        .user-profile {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            min-width: 200px;
+            z-index: 1000;
+        }
+
+        .profile-dropdown.show {
+            display: block;
+        }
+
+        .profile-dropdown a,
+        .profile-dropdown button {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        .profile-dropdown a:hover,
+        .profile-dropdown button:hover {
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .profile-dropdown i {
+            width: 20px;
+            margin-right: 0.5rem;
+        }
+
+        /* Fix for notification badge */
+        .notification {
+            position: relative;
+            margin-right: 1.5rem;
+        }
+
+        .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Fix for hamburger button */
+        .hamburger {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .hamburger:hover {
+            color: var(--primary);
+        }
+
+        /* Fix for user avatar */
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Messages Container -->
+    <div class="messages-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="close" onclick="this.parentElement.remove();">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <img src="{% static 'img/storms-logo.png' %}" alt="Storm's Logo">
+            </div>
+            <button class="hamburger" id="sidebarToggle">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-menu">
+            <h3>Main</h3>
+            <ul>
+                <li><a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>
+                    <i class="fas fa-home"></i> <span>Dashboard</span>
+                </a></li>
+                <li><a href="{% url 'booking' %}" {% if request.resolver_match.url_name == 'booking' %}class="active"{% endif %}>
+                    <i class="fas fa-calendar-alt"></i> <span>Bookings</span>
+                </a></li>
+                <li><a href="{% url 'transaction_list' %}" {% if request.resolver_match.url_name == 'transaction_list' %}class="active"{% endif %}>
+                    <i class="fas fa-exchange-alt"></i> <span>Transactions</span>
+                </a></li>
+                <li><a href="{% url 'blogs' %}" {% if request.resolver_match.url_name == 'blogs' %}class="active"{% endif %}>
+                    <i class="fas fa-blog"></i> <span>Blog/Reviews</span>
+                </a></li>
+            </ul>
+
+            <h3>Management</h3>
+            <ul>
+                <li><a href="{% url 'services' %}" {% if request.resolver_match.url_name == 'services' %}class="active"{% endif %}>
+                    <i class="fas fa-spa"></i> <span>Services</span>
+                </a></li>
+                <li>
+                    <a href="{% url 'staff_dashboard' %}" {% if request.resolver_match.url_name == 'staff_dashboard' %}class="active"{% endif %}>
+                        <i class="fas fa-users"></i> <span>Staff</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <button class="hamburger" id="mobileSidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="logo">
+                <h1>Storm's Beach and Country Club</h1>
+            </div>
+
+            <div class="user-menu">
+                <div class="notification">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">5</span>
+                </div>
+
+                <div class="user-profile" id="userProfile">
+                    {% if user.profile_image %}
+                        <img src="{{ user.profile_image.url }}" alt="{{ user.get_full_name|default:user.username }}">
+                    {% else %}
+                        <div class="profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    <span class="name">{{ user.get_full_name|default:user.username }}</span>
+                    <div class="profile-dropdown">
+                        <a href="#"><i class="fas fa-user"></i> My Profile</a>
+                        <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Base JavaScript -->
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+    
+    <!-- Auto-dismiss messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss messages after 5 seconds
+            setTimeout(function() {
+                document.querySelectorAll('.alert').forEach(function(alert) {
+                    alert.classList.remove('show');
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                });
+            }, 5000);
+
+            // Toggle mobile sidebar
+            document.getElementById('mobileSidebarToggle').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('show');
+            });
+
+            // Close sidebar on mobile
+            document.getElementById('sidebarToggle').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.remove('show');
+            });
+
+            // Toggle user profile dropdown
+            document.querySelector('.user-profile').addEventListener('click', function(e) {
+                this.querySelector('.profile-dropdown').classList.toggle('show');
+                e.stopPropagation();
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                document.querySelector('.profile-dropdown').classList.remove('show');
+            });
+        });
+    </script>
+
+    <!-- Page-specific JavaScript -->
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

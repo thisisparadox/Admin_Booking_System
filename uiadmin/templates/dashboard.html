@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | Storm's Beach and Country Club{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Content -->
+<div class="dashboard-content">
+    <div class="page-header">
+        <h1>Dashboard Overview</h1>
+    </div>
+
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search...">
+        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="title">Total Bookings</div>
+            <div class="value">{{ total_bookings }}</div>
+            <div class="change positive">
+                <i class="fas fa-chart-line"></i> All-time bookings
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="title">Pending Bookings</div>
+            <div class="value">{{ pending_bookings }}</div>
+            <div class="change negative">
+                <i class="fas fa-exclamation-circle"></i> Requires action
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="title">Total Services</div>
+            <div class="value">{{ total_services }}</div>
+            <div class="change neutral">
+                <i class="fas fa-spa"></i> Available services
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="title">Occupancy Rate</div>
+            <div class="value">0%</div>
+            <div class="change neutral">
+                <i class="fas fa-bed"></i> (Placeholder)
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+            <div class="action-card" onclick="window.location.href='{% url 'booking' %}'" style="cursor: pointer;">
+                <i class="fas fa-calendar-plus"></i>
+                <h3>Add Booking</h3>
+                <p>Create new reservation</p>
+            </div>
+
+        <div class="action-card">
+            <i class="fas fa-spa"></i>
+            <h3><a href="{% url 'services' %}">Manage Services</a></h3>
+            <p>Update service offerings</p>
+        </div>
+
+        <div class="action-card">
+            <i class="fas fa-users"></i>
+            <h3><a href="{% url 'staff' %}">Staff Management</a></h3>
+            <p>Manage staff members</p>
+        </div>
+
+        <div class="action-card">
+            <i class="fas fa-chart-bar"></i>
+            <h3><a href="#">View Reports</a></h3>
+            <p>Analytics and insights</p>
+        </div>
+    </div>
+
+    <!-- Recent Bookings -->
+    <div class="recent-bookings">
+        <h2>Recent Bookings</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if recent_bookings %}
+                        {% for booking in recent_bookings %}
+                            <tr>
+                                <td>{{ booking.booking_id }}</td>
+                                <td>{{ booking.customer_name }}</td>
+                                <td>{{ booking.service.name }}</td>
+                                <td>{{ booking.booking_date }}</td>
+                                <td><span class="status {{ booking.status }}">{{ booking.status }}</span></td>
+                                <td>${{ booking.amount }}</td>
+                                <td>
+                                    <a href="#" class="view-btn">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="empty-table">
+                                <i class="fas fa-calendar-alt fa-2x"></i>
+                                <p>No recent bookings found</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

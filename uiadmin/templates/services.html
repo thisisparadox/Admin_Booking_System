@@ -1,0 +1,1769 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Services | Storm's Beach and Country Club{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<style>
+    .dashboard-content {
+        padding: 2rem;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .page-header h1 {
+        font-size: 1.75rem;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    /* Stats Cards */
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card .title {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card .value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card .change {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .change.positive { color: #10b981; }
+    .change.negative { color: #ef4444; }
+    .change.neutral { color: #64748b; }
+
+    /* Filters */
+    .filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-select {
+        padding: 0.5rem 2.5rem 0.5rem 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: white;
+        color: #2c3e50;
+        font-size: 0.875rem;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        min-width: 160px;
+    }
+
+    /* Services Grid */
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .service-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .service-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .service-content {
+        padding: 1.5rem;
+    }
+
+    .service-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .service-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+        flex: 1;
+    }
+
+    .service-price {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #3498db;
+        background: #edf2f7;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        margin-left: 1rem;
+    }
+
+    .service-description {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+        font-size: 0.875rem;
+    }
+
+    .service-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .service-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-available {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-unavailable {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-coming_soon {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .service-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: white;
+    }
+
+    .edit-btn {
+        background: #3498db;
+    }
+
+    .edit-btn:hover {
+        background: #2980b9;
+    }
+
+    .delete-btn {
+        background: #e74c3c;
+    }
+
+    .delete-btn:hover {
+        background: #c0392b;
+    }
+
+    /* Add Service Button */
+    .add-service-btn {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .add-service-btn:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+        text-decoration: none;
+        color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 12px;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        margin-bottom: 1rem;
+        color: #3498db;
+    }
+
+    .empty-state p {
+        font-size: 1.1rem;
+    }
+
+    /* Add Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        overflow-y: auto;
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal.show {
+        display: block;
+    }
+
+    .modal-content {
+        background: white;
+        width: 90%;
+        max-width: 800px;
+        margin: 2rem auto;
+        border-radius: 15px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        position: relative;
+        animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8f9fa;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #2c3e50;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        color: #64748b;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    /* Form Elements for Modal */
+    .modal .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .modal .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .modal .form-group label .required {
+        color: #dc2626;
+        margin-left: 0.25rem;
+    }
+
+    .modal .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s;
+        background: #f8f9fa;
+    }
+
+    .modal .form-control:focus {
+        border-color: #3498db;
+        background: white;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .modal .form-control::placeholder {
+        color: #94a3b8;
+    }
+
+    .modal select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+    }
+
+    .modal textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .modal .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    /* File Upload */
+    .custom-file-upload {
+        display: block;
+        position: relative;
+        padding: 2rem;
+        background: #f8f9fa;
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .custom-file-upload:hover {
+        border-color: #3498db;
+        background: #f1f7fb;
+    }
+
+    .custom-file-upload i {
+        font-size: 2rem;
+        color: #3498db;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .custom-file-upload span {
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    .image-preview {
+        margin-top: 1rem;
+        text-align: center;
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .image-preview img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Modal Form Actions */
+    .modal .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #eee;
+    }
+
+    .modal .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modal .btn i {
+        font-size: 1rem;
+    }
+
+    .modal .btn-primary {
+        background: #3498db;
+        color: white;
+    }
+
+    .modal .btn-primary:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+    }
+
+    .modal .btn-secondary {
+        background: #94a3b8;
+        color: white;
+    }
+
+    .modal .btn-secondary:hover {
+        background: #64748b;
+        transform: translateY(-1px);
+    }
+
+    /* Error States */
+    .modal .form-control.error {
+        border-color: #dc2626;
+        background: #fef2f2;
+    }
+
+    .modal .error-message {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Loading State */
+    .modal .btn.loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    .modal .btn.loading:after {
+        content: '';
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.6s linear infinite;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    @keyframes spin {
+        to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    /* Search Bar Styles */
+    .search-bar {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto 2rem;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+
+    .search-bar input {
+        width: 100%;
+        padding: 0.875rem 1rem 0.875rem 2.75rem;
+        padding-right: 120px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s;
+        background: #f8f9fa;
+    }
+
+    .search-bar input:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        outline: none;
+        background: white;
+    }
+
+    .search-bar .search-icon {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+    }
+
+    .search-bar .search-button {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .search-bar .search-button:hover {
+        background: #2980b9;
+        transform: translateY(-50%) translateX(-2px);
+    }
+
+    .search-bar input::placeholder {
+        color: #94a3b8;
+    }
+
+    /* Notification Styles */
+    .notification {
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        padding: 0.3rem 0.6rem;
+        border-radius: 3px;
+        background: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        z-index: 1100;
+        animation: slideIn 0.3s ease;
+        pointer-events: none;
+        font-size: 0.7rem;
+        line-height: 1;
+        white-space: nowrap;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .notification i {
+        font-size: 0.7rem;
+    }
+
+    .notification.success {
+        border-left: 2px solid #10b981;
+        color: #065f46;
+        background: #ecfdf5;
+    }
+
+    .notification.success i {
+        color: #10b981;
+    }
+
+    .notification.error {
+        border-left: 2px solid #ef4444;
+        color: #991b1b;
+        background: #fef2f2;
+    }
+
+    .notification.error i {
+        color: #ef4444;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+
+    /* Edit Service Modal Styles */
+    #editServiceModal .modal-content {
+        max-width: 800px;
+        margin: 2rem auto;
+        border: none;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    #editServiceModal .modal-header {
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1rem 1.5rem;
+    }
+
+    #editServiceModal .modal-header h2 {
+        font-size: 1.25rem;
+        color: #343a40;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+    }
+
+    #editServiceModal .modal-body {
+        padding: 1.5rem;
+    }
+
+    #editServiceModal .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    #editServiceModal .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #343a40;
+        font-weight: 500;
+    }
+
+    #editServiceModal .form-group label .required {
+        color: #dc3545;
+        margin-left: 0.25rem;
+    }
+
+    #editServiceModal .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        background: #f8f9fa;
+    }
+
+    #editServiceModal .form-control:focus {
+        border-color: #4361ee;
+        background: white;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    }
+
+    #editServiceModal .custom-file-upload {
+        display: block;
+        position: relative;
+        padding: 2rem;
+        background: #f8f9fa;
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 1rem;
+    }
+
+    #editServiceModal .custom-file-upload:hover {
+        border-color: #4361ee;
+        background: #f1f7fb;
+    }
+
+    #editServiceModal .custom-file-upload input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    #editServiceModal .custom-file-upload i {
+        font-size: 2rem;
+        color: #4361ee;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    #editServiceModal .custom-file-upload span {
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    #editServiceModal .image-preview {
+        text-align: center;
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        margin-top: 1rem;
+    }
+
+    #editServiceModal .image-preview img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #editServiceModal .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    #editServiceModal .form-actions {
+        border-top: 1px solid #dee2e6;
+        padding: 1.25rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    #editServiceModal .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        min-width: 120px;
+        justify-content: center;
+    }
+
+    #editServiceModal .btn-secondary {
+        background: white;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+    }
+
+    #editServiceModal .btn-secondary:hover {
+        background: #e9ecef;
+    }
+
+    #editServiceModal .btn-primary {
+        background: #4361ee;
+        color: white;
+        border: none;
+    }
+
+    #editServiceModal .btn-primary:hover {
+        background: #3a56d4;
+    }
+
+    #editServiceModal .btn i {
+        font-size: 1rem;
+    }
+
+    /* Form Row Layout */
+    #editServiceModal .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        #editServiceModal .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Loading State */
+    #editServiceModal .btn.loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    #editServiceModal .btn.loading:after {
+        content: '';
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.6s linear infinite;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    @keyframes spin {
+        to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .text-center {
+        text-align: center !important;
+    }
+
+    .mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+
+    /* Delete Modal Styles */
+    .delete-modal {
+        max-width: 400px !important;
+        margin: 2rem auto;
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    .delete-modal .modal-header {
+        background: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .delete-modal .modal-header h2 {
+        font-size: 1.25rem;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .delete-modal .modal-header h2 i {
+        color: #dc2626;
+        font-size: 1.35rem;
+    }
+
+    .delete-modal .modal-close {
+        background: none;
+        border: none;
+        color: #6b7280;
+        padding: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+    }
+
+    .delete-modal .modal-close:hover {
+        background: #f3f4f6;
+        color: #1f2937;
+    }
+
+    .delete-modal .modal-body {
+        padding: 2rem 1.5rem;
+        text-align: center;
+    }
+
+    .delete-modal .delete-icon {
+        width: 64px;
+        height: 64px;
+        background: #fee2e2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .delete-modal .delete-icon i {
+        font-size: 1.75rem;
+        color: #dc2626;
+    }
+
+    .delete-modal .delete-title {
+        font-size: 1.25rem;
+        color: #1f2937;
+        margin: 0 0 0.75rem;
+        font-weight: 600;
+    }
+
+    .delete-modal .delete-message {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin: 0 0 1.5rem;
+        line-height: 1.5;
+    }
+
+    .delete-modal .service-info {
+        background: #f3f4f6;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        display: inline-block;
+    }
+
+    .delete-modal .service-info span {
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .delete-modal .modal-footer {
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    .delete-modal .btn-cancel {
+        padding: 0.625rem 1.25rem;
+        background: white;
+        border: 1px solid #e5e7eb;
+        color: #6b7280;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .delete-modal .btn-cancel:hover {
+        background: #f3f4f6;
+        color: #1f2937;
+        border-color: #d1d5db;
+    }
+
+    .delete-modal .btn-delete {
+        padding: 0.625rem 1.25rem;
+        background: #dc2626;
+        border: none;
+        color: white;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .delete-modal .btn-delete:hover {
+        background: #b91c1c;
+    }
+
+    .delete-modal .btn-delete.loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    .delete-modal .btn-delete.loading:after {
+        content: '';
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.6s linear infinite;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    @keyframes spin {
+        to { transform: translateY(-50%) rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+    <div class="page-header">
+        <div class="header-top">
+            <h1>Services Management</h1>
+            <button class="add-service-btn" onclick="showAddModal()">
+                <i class="fas fa-plus"></i> Add New Service
+            </button>
+        </div>
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Search services by name, description...">
+            <button class="search-button" onclick="applyFilters()">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="title">Total Services</div>
+            <div class="value">{{ services|length }}</div>
+            <div class="change neutral">
+                <i class="fas fa-spa"></i> Available services
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="title">Available Services</div>
+            <div class="value">{{ available_services }}</div>
+            <div class="change positive">
+                <i class="fas fa-check-circle"></i> Ready to book
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="title">Average Price</div>
+            <div class="value">₱{{ average_price|default:"0" }}</div>
+            <div class="change neutral">
+                <i class="fas fa-tag"></i> Per service
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <select class="filter-select" id="statusFilter">
+            <option value="">All Status</option>
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+            <option value="coming_soon">Coming Soon</option>
+        </select>
+
+        <select class="filter-select" id="priceFilter">
+            <option value="">Price Range</option>
+            <option value="0-1000">₱0 - ₱1,000</option>
+            <option value="1001-5000">₱1,001 - ₱5,000</option>
+            <option value="5001-10000">₱5,001 - ₱10,000</option>
+            <option value="10001+">₱10,001+</option>
+        </select>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="services-grid">
+        {% for service in services %}
+        <div class="service-card" data-status="{{ service.status }}" data-price="{{ service.base_price }}">
+            {% if service.image %}
+                <img src="{{ service.image.url }}" alt="{{ service.name }}" class="service-image">
+            {% else %}
+                <img src="{% static 'img/service-placeholder.jpg' %}" alt="{{ service.name }}" class="service-image">
+            {% endif %}
+            <div class="service-content">
+                <div class="service-header">
+                    <h3 class="service-title">{{ service.name }}</h3>
+                    <span class="service-price">₱{{ service.base_price }}</span>
+                </div>
+                <p class="service-description">{{ service.description|truncatechars:100 }}</p>
+                <div class="service-footer">
+                    <span class="service-status status-{{ service.status }}">{{ service.status|title }}</span>
+                    <div class="service-actions">
+                        <button class="action-btn edit-btn" onclick="editService('{{ service.id }}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteService('{{ service.id }}', '{{ service.name }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-spa fa-3x"></i>
+            <p>No services found</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add Service Modal -->
+    <div class="modal" id="addServiceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Add New Service</h2>
+                <button type="button" class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" enctype="multipart/form-data" id="serviceForm">
+                    {% csrf_token %}
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="service_name">Service Name <span class="required">*</span></label>
+                            <input type="text" id="service_name" name="service_name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="base_price">Base Price <span class="required">*</span></label>
+                            <input type="number" id="base_price" name="base_price" class="form-control" step="0.01" min="0" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pricing_type">Pricing Type <span class="required">*</span></label>
+                            <select id="pricing_type" name="pricing_type" class="form-control" required>
+                                <option value="">Select Pricing Type</option>
+                                <option value="per_head">Per Head</option>
+                                <option value="per_space">Per Space</option>
+                                <option value="per_cottage">Per Cottage</option>
+                                <option value="per_night">Per Night</option>
+                                <option value="per_hour">Per Hour</option>
+                                <option value="fixed">Fixed Price</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status <span class="required">*</span></label>
+                            <select id="status" name="status" class="form-control" required>
+                                <option value="">Select Status</option>
+                                <option value="available">Available</option>
+                                <option value="unavailable">Unavailable</option>
+                                <option value="coming_soon">Coming Soon</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description <span class="required">*</span></label>
+                        <textarea id="description" name="description" class="form-control" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="additional_info">Additional Information</label>
+                        <textarea id="additional_info" name="additional_info" class="form-control"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Service Image</label>
+                        <div class="custom-file-upload">
+                            <input type="file" id="image" name="image" accept="image/*">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Click to upload image</span>
+                        </div>
+                        <div class="image-preview" id="imagePreview"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Service
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Service Modal -->
+    <div id="editServiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Edit Service</h2>
+                <button class="close-btn" onclick="closeEditServiceModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editServiceForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="edit_service_id" name="service_id">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_service_name">Service Name <span class="required">*</span></label>
+                            <input type="text" id="edit_service_name" name="service_name" class="form-control" required>
+                            <div class="error-message" id="edit-service_name-error"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_base_price">Base Price <span class="required">*</span></label>
+                            <input type="number" id="edit_base_price" name="base_price" class="form-control" step="0.01" min="0" required>
+                            <div class="error-message" id="edit-base_price-error"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_pricing_type">Pricing Type <span class="required">*</span></label>
+                            <select id="edit_pricing_type" name="pricing_type" class="form-control" required>
+                                {% for value, label in pricing_types %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="error-message" id="edit-pricing_type-error"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_status">Status <span class="required">*</span></label>
+                            <select id="edit_status" name="status" class="form-control" required>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="error-message" id="edit-status-error"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_description">Description <span class="required">*</span></label>
+                        <textarea id="edit_description" name="description" class="form-control" rows="3" required></textarea>
+                        <div class="error-message" id="edit-description-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_additional_info">Additional Information</label>
+                        <textarea id="edit_additional_info" name="additional_info" class="form-control" rows="2"></textarea>
+                        <div class="error-message" id="edit-additional_info-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Service Image</label>
+                        <div class="custom-file-upload">
+                            <input type="file" id="edit_image" name="image" accept="image/*">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Click to upload or change image</span>
+                        </div>
+                        <div class="image-preview">
+                            <img id="editImagePreview" src="#" alt="Service Preview">
+                        </div>
+                        <div class="error-message" id="edit-image-error"></div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditServiceModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Service
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Service Modal -->
+    <div id="deleteServiceModal" class="modal">
+        <div class="modal-content delete-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-exclamation-circle text-danger"></i>
+                    Confirm Deletion
+                </h2>
+                <button class="modal-close" onclick="closeDeleteServiceModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="delete-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <h3 class="delete-title">Delete Service?</h3>
+                <p class="delete-message">Are you sure you want to delete this service? This action cannot be undone.</p>
+                <div class="service-info">
+                    <span id="deleteServiceName"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeDeleteServiceModal()">
+                    Cancel
+                </button>
+                <button type="button" class="btn-delete" onclick="confirmDeleteService()">
+                    Delete Service
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get DOM elements
+    const form = document.getElementById('serviceForm');
+    const modal = document.getElementById('addServiceModal');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
+
+    // Show modal function
+    window.showAddModal = function() {
+        modal.style.display = 'block';
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    };
+
+    // Delete service function
+    window.deleteService = function(serviceId, serviceName) {
+        currentServiceId = serviceId;
+        document.getElementById('deleteServiceName').textContent = serviceName;
+        document.getElementById('deleteServiceModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    };
+
+    // Edit service function
+    window.editService = function(serviceId) {
+        currentServiceId = serviceId;
+        
+        // Fetch service details
+        fetch(`/services/${serviceId}/details/`)
+            .then(response => response.json())
+            .then(data => {
+                // Populate form fields
+                document.getElementById('edit_service_id').value = data.id;
+                document.getElementById('edit_service_name').value = data.name;
+                document.getElementById('edit_description').value = data.description;
+                document.getElementById('edit_base_price').value = data.base_price;
+                document.getElementById('edit_pricing_type').value = data.pricing_type;
+                document.getElementById('edit_status').value = data.status;
+                document.getElementById('edit_additional_info').value = data.additional_info || '';
+                
+                // Show image preview if exists
+                const imagePreview = document.getElementById('editImagePreview');
+                if (data.image_url) {
+                    imagePreview.src = data.image_url;
+                    imagePreview.style.display = 'block';
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+                
+                // Show modal
+                document.getElementById('editServiceModal').classList.add('show');
+                document.body.style.overflow = 'hidden';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error loading service details', 'error');
+            });
+    };
+
+    // Close modal function
+    window.closeModal = function() {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            form.reset();
+            imagePreview.innerHTML = '';
+            clearErrors();
+        }, 300);
+    };
+
+    // Clear errors function
+    function clearErrors() {
+        const errorMessages = form.querySelectorAll('.error-message');
+        const errorInputs = form.querySelectorAll('.form-control.error');
+        
+        errorMessages.forEach(el => el.remove());
+        errorInputs.forEach(el => el.classList.remove('error'));
+    }
+
+    // Show notification function
+    function showNotification(message, type = 'success') {
+        // Remove any existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => {
+            notification.remove();
+        });
+
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        // Append notification to body
+        document.body.appendChild(notification);
+        
+        // Remove notification after delay
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        // Clear previous errors
+        clearErrors();
+
+        // Add loading state
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+
+        fetch('{% url "services" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Create and append new service card
+                const servicesGrid = document.querySelector('.services-grid');
+                const emptyState = document.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+
+                const newServiceCard = createServiceCard(data.service);
+                servicesGrid.insertBefore(newServiceCard, servicesGrid.firstChild);
+                
+                // Update stats
+                updateStats(data.stats);
+                
+                // Show success message
+                showNotification('Service added successfully!', 'success');
+                
+                // Close modal and reset form
+                closeModal();
+            } else {
+                throw new Error(data.error || 'Error adding service');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification(error.message || 'An unexpected error occurred. Please try again.', 'error');
+        })
+        .finally(() => {
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+        });
+    });
+
+    // Image preview
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            imagePreview.innerHTML = '';
+        }
+    });
+
+    // Create service card function
+    function createServiceCard(service) {
+        const card = document.createElement('div');
+        card.className = 'service-card';
+        card.dataset.id = service.id;
+        card.dataset.status = service.status;
+        card.dataset.price = service.base_price;
+
+        const imageUrl = service.image_url || '{% static "img/service-placeholder.jpg" %}';
+        
+        card.innerHTML = `
+            <img src="${imageUrl}" alt="${service.name}" class="service-image">
+            <div class="service-content">
+                <div class="service-header">
+                    <h3 class="service-title">${service.name}</h3>
+                    <span class="service-price">₱${service.base_price}</span>
+                </div>
+                <p class="service-description">${service.description}</p>
+                <div class="service-footer">
+                    <span class="service-status status-${service.status}">${service.status.replace('_', ' ').charAt(0).toUpperCase() + service.status.slice(1)}</span>
+                    <div class="service-actions">
+                        <button class="action-btn edit-btn" onclick="editService('${service.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteService('${service.id}', '${service.name}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        return card;
+    }
+
+    // Update stats function
+    function updateStats(stats) {
+        if (stats) {
+            const totalServices = document.querySelector('.stat-card:nth-child(1) .value');
+            const availableServices = document.querySelector('.stat-card:nth-child(2) .value');
+            const averagePrice = document.querySelector('.stat-card:nth-child(3) .value');
+
+            if (totalServices) totalServices.textContent = stats.total_services;
+            if (availableServices) availableServices.textContent = stats.available_services;
+            if (averagePrice) averagePrice.textContent = `₱${stats.average_price || 0}`;
+        }
+    }
+
+    // Function to update average price
+    function updateAveragePrice() {
+        const services = document.querySelectorAll('.service-card');
+        let total = 0;
+        services.forEach(service => {
+            const price = parseFloat(service.dataset.price) || 0;
+            total += price;
+        });
+        const average = services.length ? (total / services.length).toFixed(2) : '0';
+        
+        const averagePriceElement = document.querySelector('.stat-card:nth-child(3) .value');
+        if (averagePriceElement) {
+            averagePriceElement.textContent = `₱${average}`;
+        }
+    }
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+});
+
+let currentServiceId = null;
+
+function editService(serviceId) {
+    currentServiceId = serviceId;
+    
+    // Fetch service details
+    fetch(`/services/${serviceId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            // Populate form fields
+            document.getElementById('edit_service_id').value = data.id;
+            document.getElementById('edit_service_name').value = data.name;
+            document.getElementById('edit_description').value = data.description;
+            document.getElementById('edit_base_price').value = data.base_price;
+            document.getElementById('edit_pricing_type').value = data.pricing_type;
+            document.getElementById('edit_status').value = data.status;
+            document.getElementById('edit_additional_info').value = data.additional_info || '';
+            
+            // Show image preview if exists
+            const imagePreview = document.getElementById('editImagePreview');
+            if (data.image_url) {
+                imagePreview.src = data.image_url;
+                imagePreview.style.display = 'block';
+            } else {
+                imagePreview.style.display = 'none';
+            }
+            
+            // Show modal
+            document.getElementById('editServiceModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error loading service details', 'error');
+        });
+}
+
+function closeEditServiceModal() {
+    document.getElementById('editServiceModal').classList.remove('show');
+    document.body.style.overflow = '';
+    document.getElementById('editServiceForm').reset();
+    document.getElementById('editImagePreview').style.display = 'none';
+    document.querySelectorAll('#editServiceModal .error-message').forEach(el => el.textContent = '');
+    currentServiceId = null;
+}
+
+function deleteService(serviceId, serviceName) {
+    currentServiceId = serviceId;
+    document.getElementById('deleteServiceName').textContent = serviceName;
+    document.getElementById('deleteServiceModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteServiceModal() {
+    document.getElementById('deleteServiceModal').classList.remove('show');
+    document.body.style.overflow = '';
+    currentServiceId = null;
+}
+
+function confirmDeleteService() {
+    if (!currentServiceId) return;
+    
+    fetch(`/services/${currentServiceId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(data => {
+        if (data.success) {
+            // Immediately remove the service card and close modal
+            const serviceCard = document.querySelector(`.service-card[data-id="${currentServiceId}"]`);
+            if (serviceCard) {
+                serviceCard.remove();
+            }
+            closeDeleteServiceModal();
+            
+            // Update stats if empty
+            const servicesGrid = document.querySelector('.services-grid');
+            if (servicesGrid && servicesGrid.children.length === 0) {
+                servicesGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-spa fa-3x"></i>
+                        <p>No services found</p>
+                    </div>
+                `;
+            }
+        }
+    });
+}
+
+// Edit form submission
+document.getElementById('editServiceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!currentServiceId) return;
+    
+    // Clear previous errors
+    document.querySelectorAll('#editServiceModal .error-message').forEach(el => el.textContent = '');
+    document.querySelectorAll('#editServiceModal .form-control').forEach(el => {
+        el.classList.remove('error');
+        el.style.borderColor = '';
+    });
+    
+    const formData = new FormData(this);
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    
+    fetch(`/services/${currentServiceId}/edit/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Immediately redirect to services page
+            window.location.href = '{% url "services" %}';
+        } else {
+            // Show field-specific errors
+            if (data.errors) {
+                Object.entries(data.errors).forEach(([field, errors]) => {
+                    const errorDiv = document.getElementById(`edit-${field}-error`);
+                    const input = document.getElementById(`edit_${field}`);
+                    if (errorDiv) {
+                        errorDiv.textContent = errors[0];
+                    }
+                    if (input) {
+                        input.classList.add('error');
+                        input.style.borderColor = '#dc2626';
+                    }
+                });
+            }
+            
+            // Show error notification
+            showNotification('An error occurred while updating the service', 'error');
+            
+            // Reset submit button
+            submitBtn.disabled = false;
+        }
+    });
+});
+
+// Image preview for edit form
+document.getElementById('edit_image').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('editImagePreview');
+            preview.style.display = 'block';
+            preview.src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Close modals when clicking outside
+document.getElementById('editServiceModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditServiceModal();
+    }
+});
+
+document.getElementById('deleteServiceModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteServiceModal();
+    }
+});
+</script>
+{% endblock %}
